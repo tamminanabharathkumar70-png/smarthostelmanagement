@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HostelPulse - Smart Hostel Management System</title>
+  <meta name="description" content="Digital portal for Boys & Girls Hostels, Warden Attendance, Mess Operations, and Principal Executive Audits." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ==========================================================================
+       LOGIN & REGISTRATION SCREEN OVERLAY (Shown if user is not authenticated)
+       ========================================================================== -->
+  <div id="loginView" class="login-view-wrapper" style="display: none;">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">🏢</div>
+        <h2>HostelPulse Portal</h2>
+        <p>Access Boys Hostel, Girls Hostel, Dining & Directorate</p>
+      </div>
+
+      <!-- Tab Switcher: Sign In vs New Student Registration vs Reset Password -->
+      <div class="login-tabs-bar">
+        <button id="tabBtnSignIn" class="login-tab-pill active" onclick="switchLoginTab('signin')">
+          🔐 Sign In
+        </button>
+        <button id="tabBtnRegister" class="login-tab-pill" onclick="switchLoginTab('register')">
+          📝 Register
+        </button>
+        <button id="tabBtnForgot" class="login-tab-pill" onclick="switchLoginTab('forgot')">
+          🔑 Reset Password
+        </button>
+      </div>
+
+      <!-- TAB 1: SIGN IN VIEW -->
+      <div id="loginSignInView">
+        <form id="loginForm" onsubmit="handleManualLogin(event)">
+          <div class="form-group">
+            <label class="form-label">Username or Student Roll Number *</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="e.g. aarav, CS24B1042, warden_boys, principal..." required />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password..." required />
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+            <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+              Forgot Password?
+            </a>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
+            Sign In to HostelPulse
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 2: RESET PASSWORD INLINE VIEW -->
+      <div id="loginForgotView" style="display: none;">
+        <form id="inlineForgotForm" onsubmit="handleInlineResetPassword(event)">
+          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px; font-size: 0.85rem; color: #1e40af; line-height: 1.4;">
+            <strong>Verification Required:</strong> Enter your Student Roll Number (or Username) and your registered Phone Number to verify your details.
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Student Roll Number or Username *</label>
+            <input type="text" id="inlineForgotUsername" class="form-control" placeholder="e.g. 21546789, CS24B1042, kaff..." oninput="updateInlineForgotAccountPreview()" required />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Registered Mobile / Phone Number *</label>
+            <input type="tel" id="inlineForgotPhone" class="form-control" placeholder="e.g. 9876543210 or your mobile..." oninput="updateInlineForgotAccountPreview()" required />
+          </div>
+
+          <!-- Live Account Preview -->
+          <div id="inlineForgotAccountPreview" style="display: none; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--border-subtle);">
+            <span id="inlineForgotAccountIcon" style="font-size: 1.3rem;">✅</span>
+            <div style="flex: 1; line-height: 1.25;">
+              <strong id="inlineForgotAccountName" style="font-size: 0.88rem; display: block;">Student Verified</strong>
+              <span id="inlineForgotAccountDetails" style="font-size: 0.75rem;">Hostel & Room Confirmed</span>
+            </div>
+            <span id="inlineForgotAccountBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700;">Account Matched</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">New Password *</label>
+            <input type="password" id="inlineForgotNewPassword" class="form-control" placeholder="Enter new password" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm New Password *</label>
+            <input type="password" id="inlineForgotConfirmPassword" class="form-control" placeholder="Re-type new password" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; margin-top: 8px;">
+            Verify Details & Update Password
+          </button>
+
+          <div style="text-align: center; margin-top: 14px;">
+            <a href="javascript:void(0)" onclick="switchLoginTab('signin')" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
+              ← Back to Sign In
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: NEW STUDENT REGISTRATION VIEW -->
+      <div id="loginRegisterView" style="display: none;">
+        <form id="studentRegistrationForm" onsubmit="handleStudentRegistration(event)">
+          <div style="margin-bottom: 12px;">
+            <label class="form-label">Select Gender (Auto-routes to your Hostel) *</label>
+            <div class="gender-select-grid">
+              <div id="genderCardBoy" class="gender-option-card selected boy" onclick="selectRegistrationGender('boy')">
+                <span style="font-size: 1.5rem;">👦</span>
+                <strong style="display: block; font-size: 0.9rem; margin-top: 4px;">Boy Student</strong>
+                <span style="font-size: 0.72rem; color: #2563eb;">→ Boys Hostel (Nilgiri)</span>
+              </div>
+              <div id="genderCardGirl" class="gender-option-card girl" onclick="selectRegistrationGender('girl')">
+                <span style="font-size: 1.5rem;">👧</span>
+                <strong style="display: block; font-size: 0.9rem; margin-top: 4px;">Girl Student</strong>
+                <span style="font-size: 0.72rem; color: #db2777;">→ Girls Hostel (Ganga)</span>
+              </div>
+            </div>
+            <input type="hidden" id="regGender" value="boy" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="regName" class="form-control" placeholder="e.g. Rohan Verma" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Roll Number *</label>
+              <input type="text" id="regRollNo" class="form-control" placeholder="e.g. CS24B1088" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Hostel Allotted Room *</label>
+              <input type="text" id="regRoom" class="form-control" placeholder="e.g. B-210" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Academic Branch *</label>
+              <select id="regBranch" class="form-control" required>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Electronics & Comm">Electronics & Comm</option>
+                <option value="Mechanical Eng">Mechanical Eng</option>
+                <option value="Electrical Eng">Electrical Eng</option>
+                <option value="Chemical Eng">Chemical Eng</option>
+                <option value="Civil Eng">Civil Eng</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Academic Year</label>
+              <select id="regYear" class="form-control">
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year" selected>2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" id="regPhone" class="form-control" placeholder="+91 98765-XXXXX" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Create Username *</label>
+              <input type="text" id="regUsername" class="form-control" placeholder="e.g. rohan24" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Create Password *</label>
+              <input type="password" id="regPassword" class="form-control" placeholder="Minimum 4 characters" required />
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; margin-top: 6px;">
+            Complete Registration & Enter Portal
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       TOP ANNOUNCEMENT BANNER (Pinned Urgent Alerts)
+       ========================================================================== -->
+  <div id="topUrgentBanner" class="urgent-banner">
+    <div class="urgent-banner-content">
+      <span class="urgent-badge">URGENT NOTICE</span>
+      <span id="topUrgentText" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        Scheduled Overhead Water Tank Cleaning & Sanitization on Saturday 09:00 AM.
+      </span>
+      <button id="topUrgentClose" class="urgent-banner-close" title="Dismiss banner">&times;</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN APP HEADER
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <a class="brand" onclick="switchTab('complaints')">
+        <div class="brand-icon-box">🏢</div>
+        <div class="brand-text">
+          <h1>HostelPulse</h1>
+          <p id="portalHostelSubtitle">Smart Living & Admin Portal</p>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Emergency SOS Button -->
+        <button class="btn-emergency-sos" onclick="triggerEmergencySOSModal()">
+          <span>🚨</span>
+          <span>SOS Emergency</span>
+        </button>
+
+        <!-- Current User Session Info -->
+        <div class="user-session-box">
+          <img id="sessionAvatar" class="user-session-avatar" src="" alt="User" onclick="openEditProfileModal()" style="cursor: pointer;" title="Click to edit profile" />
+          <div style="line-height: 1.15; cursor: pointer;" onclick="openEditProfileModal()" title="Click to edit profile">
+            <div id="sessionName" style="font-size: 0.85rem; font-weight: 700;">Aarav Sharma</div>
+            <div style="display: flex; gap: 4px; align-items: center; margin-top: 2px;">
+              <span id="sessionHostelBadge" class="hostel-indicator-badge boys">Boys Hostel</span>
+              <span id="sessionRoleBadge" style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Student</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openEditProfileModal()" title="Edit My Profile" style="padding: 4px 8px; font-size: 0.75rem; border-radius: var(--radius-sm); margin-left: 4px;">
+            ✏️ Profile
+          </button>
+          <button class="btn-logout" onclick="handleLogout()" title="Logout of session">
+            🚪 Logout
+          </button>
+        </div>
+
+        <!-- Light / Dark Mode Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN NAVIGATION TABS (Dynamic according to role)
+       ========================================================================== -->
+  <nav class="main-nav">
+    <div id="navContainer" class="nav-container">
+      <!-- Tabs will be rendered dynamically by app.js based on role -->
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       APPLICATION MAIN CONTENT SHELL
+       ========================================================================== -->
+  <main class="app-main">
+
+    <!-- TAB: MAINTENANCE & COMPLAINTS -->
+    <section id="tab-complaints" class="tab-content">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2 id="complaintsSectionTitle"><span>🛠️</span> Maintenance & Issue Tracking</h2>
+          <p id="complaintsSectionDesc">Report hostel issues, track resolution timelines, and upvote common concerns.</p>
+        </div>
+        <div class="header-action-group">
+          <button id="btnOpenNewComplaint" class="btn btn-primary">
+            <span>+</span> Log New Complaint
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div id="complaintsStatsContainer" class="stats-grid"></div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="complaintSearch" class="search-input" placeholder="Search by Ticket ID, room number, or keyword..." />
+        </div>
+
+        <div class="filter-group">
+          <select id="filterCategory" class="select-filter">
+            <option value="all">All Categories</option>
+            <option value="electrical">⚡ Electrical</option>
+            <option value="plumbing">💧 Plumbing & Water</option>
+            <option value="cleanliness">🧹 Cleanliness & Sanitation</option>
+            <option value="carpentry">🪚 Carpentry & Furniture</option>
+            <option value="wifi">📶 WiFi & Internet</option>
+            <option value="mess">🍽️ Mess & Food Quality</option>
+            <option value="civil">🏢 Civil & Repairs</option>
+          </select>
+
+          <select id="filterStatus" class="select-filter">
+            <option value="all">All Statuses</option>
+            <option value="open">Open / Unassigned</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+
+          <select id="filterPriority" class="select-filter">
+            <option value="all">All Priorities</option>
+            <option value="critical">🚨 Critical (6h)</option>
+            <option value="high">High (12h)</option>
+            <option value="medium">Medium (24h)</option>
+            <option value="low">Low (48h)</option>
+          </select>
+
+          <!-- Principal Hostel Filter (Only shown to Principal) -->
+          <select id="filterPrincipalHostel" class="select-filter" style="display: none;">
+            <option value="all">🏢 Both Hostels (Whole Campus)</option>
+            <option value="boys">👦 Boys Hostel Only</option>
+            <option value="girls">👧 Girls Hostel Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Complaints Cards Grid -->
+      <div id="complaintsContainer" class="complaints-grid"></div>
+    </section>
+
+    <!-- TAB: DAILY ATTENDANCE (WARDEN MARKER & STUDENT RECORD) -->
+    <section id="tab-attendance" class="tab-content">
+      <div id="attendanceTabContent">
+        <!-- Rendered dynamically for Warden (marker) vs Student (history) vs Principal (audit) -->
+      </div>
+    </section>
+
+    <!-- TAB: MESS & DINING ("MessIQ") -->
+    <section id="tab-mess" class="tab-content">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2><span>🍲</span> Mess & Dining Hall ("MessIQ")</h2>
+          <p>Daily meal schedule, real-time dining hall crowd gauge, meal quality ratings, and special sick diet requests.</p>
+        </div>
+        <div class="header-action-group">
+          <button id="btnOpenSickMeal" class="btn btn-secondary">
+            <span>🥣</span> Request Sick Meal
+          </button>
+          <button id="btnOpenMessMenuEditor" class="btn btn-primary" style="display: none;">
+            <span>✏️</span> Edit Today's Menu (Mess Owner)
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-time Rush Status Banner -->
+      <div id="messStatusBanner" class="mess-status-banner"></div>
+
+      <div class="mess-dashboard-grid">
+        <!-- Today's 4 Meals List -->
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">
+            Today's Courses & Feedback
+          </h3>
+          <div id="messCoursesList" class="meal-courses-list"></div>
+        </div>
+
+        <!-- Sick Meal Deliveries & Mess Notice -->
+        <div>
+          <div class="mess-card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">
+              🥣 Sick Diet Deliveries
+            </h3>
+            <div id="sickMealsList"></div>
+          </div>
+
+          <div class="mess-card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main);">
+              👨‍🍳 Mess Contractor Desk
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+              Operated by <strong>Chef Vikram Rathore</strong>. Mess feedback is inspected daily by the Hostel Council & Principal.
+            </p>
+            <div style="font-size: 0.8rem; background: var(--bg-subtle); padding: 10px; border-radius: 8px;">
+              📞 Mess Manager Helpline: <strong>+91 98765-00005</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: DIGITAL NOTICE BOARD -->
+    <section id="tab-notices" class="tab-content">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2><span>📢</span> Digital Announcements & Notice Board</h2>
+          <p>Official circulars, maintenance schedules, discipline updates, and hostel events.</p>
+        </div>
+        <div class="header-action-group">
+          <button id="btnOpenPostNotice" class="btn btn-primary" style="display: none;">
+            <span>+</span> Publish New Circular
+          </button>
+        </div>
+      </div>
+
+      <div id="announcementsContainer" class="announcements-grid"></div>
+    </section>
+
+    <!-- TAB: EMERGENCY SOS & SAFETY HUB -->
+    <section id="tab-emergency" class="tab-content">
+      <div class="emergency-hub-banner">
+        <h2>🚨 Instant Emergency SOS & Safety Hub</h2>
+        <p>In case of serious medical issues, fire/smoke hazard, electrical short circuits, or security incidents, trigger an immediate broadcast.</p>
+        <button class="sos-trigger-big-btn" onclick="triggerEmergencySOSModal()">
+          <span>🔔</span> BROADCAST EMERGENCY SOS
+        </button>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h3>24x7 Emergency Contact Directory</h3>
+          <p>Direct telephone helplines for campus doctors, hostel wardens, and security control.</p>
+        </div>
+      </div>
+
+      <div id="emergencyContactsContainer" class="emergency-contacts-grid"></div>
+    </section>
+
+    <!-- TAB: LOST & FOUND -->
+    <section id="tab-lostfound" class="tab-content">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2><span>🔍</span> Lost & Found Community Board</h2>
+          <p>Report misplaced keys, IDs, gadgets, or return belongings found in hostel common areas.</p>
+        </div>
+        <div class="header-action-group">
+          <button id="btnOpenReportLost" class="btn btn-primary">
+            <span>+</span> Report Item
+          </button>
+        </div>
+      </div>
+
+      <div id="lostAndFoundContainer" class="stats-grid"></div>
+    </section>
+
+    <!-- TAB: PRINCIPAL EXECUTIVE COMMAND CENTER -->
+    <section id="tab-principal" class="tab-content">
+      <div id="principalCommandContent"></div>
+    </section>
+
+    <!-- TAB: WARDEN HOSTEL ROSTER -->
+    <section id="tab-roster" class="tab-content">
+      <div id="wardenRosterContent"></div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       MODALS
+       ========================================================================== -->
+
+  <!-- Modal 1: New Complaint Submission -->
+  <div id="newComplaintModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Log Maintenance Complaint</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="newComplaintForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Issue Title / Subject *</label>
+            <input type="text" id="newComplaintTitle" class="form-control" placeholder="e.g. Geyser tripping circuit, Leaking tap, Broken chair..." required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select id="newComplaintCategory" class="form-control" required>
+                <option value="electrical">⚡ Electrical</option>
+                <option value="plumbing">💧 Plumbing & Water</option>
+                <option value="cleanliness">🧹 Cleanliness & Sanitation</option>
+                <option value="carpentry">🪚 Carpentry & Furniture</option>
+                <option value="wifi">📶 WiFi & Internet</option>
+                <option value="mess">🍽️ Mess & Food Quality</option>
+                <option value="civil">🏢 Civil & Repairs</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Priority / Severity *</label>
+              <select id="newComplaintPriority" class="form-control" required>
+                <option value="medium">Medium (Resolved in 24h)</option>
+                <option value="high">High (Resolved in 12h)</option>
+                <option value="critical">🚨 Critical / Urgent (Resolved in 6h)</option>
+                <option value="low">Low (Routine maintenance)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Hostel (Auto-Assigned)</label>
+              <input type="text" id="newComplaintHostelDisplay" class="form-control" readonly />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Room / Exact Location *</label>
+              <input type="text" id="newComplaintRoom" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Preferred Technician Visit Slot</label>
+            <select id="newComplaintSlot" class="form-control">
+              <option value="Evening (04:00 PM - 06:00 PM)">Evening (04:00 PM - 06:00 PM)</option>
+              <option value="Morning (09:00 AM - 12:00 PM)">Morning (09:00 AM - 12:00 PM)</option>
+              <option value="Afternoon (02:00 PM - 04:00 PM)">Afternoon (02:00 PM - 04:00 PM)</option>
+              <option value="Anytime (When room is unlocked)">Anytime (Roommate available)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Detailed Description of Problem *</label>
+            <textarea id="newComplaintDesc" class="form-control" rows="3" placeholder="Please describe the issue in detail..." required></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Ticket Detail & Tracking Timeline -->
+  <div id="ticketDetailModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Ticket Details & Status</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div id="ticketDetailModalContent" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Warden Ticket Management -->
+  <div id="manageTicketModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Manage Complaint Work Order</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="manageTicketForm">
+        <div class="modal-body">
+          <p id="manageTicketIdDisplay" style="font-weight: 700; color: var(--primary); margin-bottom: 14px;"></p>
+          <input type="hidden" id="manageTicketIdInput" />
+
+          <div class="form-group">
+            <label class="form-label">Change Status</label>
+            <select id="manageTicketStatus" class="form-control">
+              <option value="open">Open (Unassigned / Pending)</option>
+              <option value="in-progress">In Progress (Work Assigned / On-site)</option>
+              <option value="resolved">Resolved (Work Done & Tested)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assign Maintenance Technician</label>
+            <select id="manageTicketAssigned" class="form-control"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Technician Inspection Log / Action Taken</label>
+            <textarea id="manageTicketNotes" class="form-control" rows="3" placeholder="Enter materials used, parts replaced, or scheduled inspection slot..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Rate Meal Feedback -->
+  <div id="mealFeedbackModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="mealFeedbackTitle">Rate Today's Meal</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="mealFeedbackForm">
+        <div class="modal-body">
+          <input type="hidden" id="mealFeedbackKey" />
+          
+          <div class="form-group">
+            <label class="form-label">Food Quality & Taste Rating</label>
+            <select id="mealFeedbackRating" class="form-control">
+              <option value="5">⭐⭐⭐⭐⭐ Excellent (5 Stars)</option>
+              <option value="4" selected>⭐⭐⭐⭐ Good (4 Stars)</option>
+              <option value="3">⭐⭐⭐ Average (3 Stars)</option>
+              <option value="2">⭐⭐ Needs Improvement (2 Stars)</option>
+              <option value="1">⭐ Poor Quality / Cold Food (1 Star)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Comments or Specific Suggestions</label>
+            <textarea id="mealFeedbackComment" class="form-control" rows="3" placeholder="e.g. Sambar was fantastic, Paneer gravy was slightly salty, etc..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Rating</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Sick Meal Request -->
+  <div id="sickMealModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Request Sick Diet Room Delivery</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="sickMealForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Meal Slot</label>
+            <select id="sickMealTime" class="form-control">
+              <option value="Lunch">Lunch (12:30 PM)</option>
+              <option value="Dinner">Dinner (08:00 PM)</option>
+              <option value="Breakfast">Next Day Breakfast (08:30 AM)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Preferred Light Diet</label>
+            <select id="sickMealDiet" class="form-control">
+              <option value="Moong Dal Khichdi + Fresh Curd">Moong Dal Khichdi + Fresh Curd</option>
+              <option value="Vegetable Dalia Porridge">Vegetable Dalia Porridge</option>
+              <option value="Boiled Eggs (2 pcs) + Warm Toast + Milk">Boiled Eggs (2 pcs) + Warm Toast + Milk</option>
+              <option value="Steamed Rice with Light Rasam">Steamed Rice with Light Rasam</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Health Note / Room Instructions</label>
+            <textarea id="sickMealNote" class="form-control" rows="2" placeholder="e.g. Having fever, please leave tray at room door..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 6: Post Announcement (Wardens & Principal & Mess Owner) -->
+  <div id="postNoticeModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Publish Hostel Announcement</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="postNoticeForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Announcement Title *</label>
+            <input type="text" id="noticeTitle" class="form-control" placeholder="e.g. Water Tank Maintenance / Gym Hours..." required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="noticeCategory" class="form-control">
+                <option value="Maintenance">Maintenance & Facilities</option>
+                <option value="Discipline & Safety">Discipline & Safety</option>
+                <option value="Mess Committee">Mess Committee</option>
+                <option value="Sports & Recreation">Sports & Recreation</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Urgency Level</label>
+              <select id="noticeUrgency" class="form-control">
+                <option value="general">General Notice</option>
+                <option value="important">⚠️ Important</option>
+                <option value="urgent">🚨 Urgent (Shows in Top Banner)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Hostel / Audience</label>
+            <select id="noticeTargetHostel" class="form-control">
+              <option value="all">🏢 All Hostels (Boys & Girls)</option>
+              <option value="boys">👦 Boys Hostel Only</option>
+              <option value="girls">👧 Girls Hostel Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Announcement Body *</label>
+            <textarea id="noticeContent" class="form-control" rows="4" placeholder="Enter circular details..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
+              <input type="checkbox" id="noticeIsPinned" checked />
+              <span>Pin to top of digital noticeboard</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Publish Circular</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 7: Report Lost/Found Item -->
+  <div id="reportLostModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Report Item on Lost & Found</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="reportLostForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Post Type</label>
+            <select id="lostItemType" class="form-control">
+              <option value="lost">🔎 I LOST an Item (Searching)</option>
+              <option value="found">🎁 I FOUND an Item (Claimable)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Item Name / Description *</label>
+            <input type="text" id="lostItemTitle" class="form-control" placeholder="e.g. Casio Calculator, Blue Wallet, Keys..." required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Location Last Seen / Found *</label>
+            <input type="text" id="lostItemLocation" class="form-control" placeholder="e.g. Dining Hall, 2nd floor corridor..." required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contact Info / Claim Desk</label>
+            <input type="text" id="lostItemContact" class="form-control" placeholder="e.g. Contact Aarav (Room B-204)" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Post Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 8: Instant Emergency SOS Modal -->
+  <div id="sosTriggerModal" class="modal-overlay">
+    <div class="modal-card" style="border: 2px solid #ef4444;">
+      <div class="modal-header" style="background: #fee2e2; border-bottom: 1px solid #fca5a5;">
+        <h3 style="color: #b91c1c;">🚨 Trigger Emergency SOS Alert</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="sosTriggerForm">
+        <div class="modal-body">
+          <div style="background: #fef2f2; border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px; font-size: 0.85rem; color: #991b1b; line-height: 1.4;">
+            <strong>Immediate Alert Notice:</strong> Pings your Hostel Warden, Campus Health Clinic, and Main Security Control immediately.
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Emergency Category *</label>
+            <select id="sosReason" class="form-control" required>
+              <option value="Medical Emergency">🚑 Medical Emergency (Injury, Severe Pain, Fainting)</option>
+              <option value="Fire / Smoke Hazard">🔥 Fire / Smoke / Gas Hazard</option>
+              <option value="Electrical Hazard">⚡ Electrical Spark / Short Circuit</option>
+              <option value="Security / Intrusion">🛡️ Security Incident / Intruder / Physical Threat</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Current Room / Location</label>
+            <input type="text" id="sosLocationInput" class="form-control" readonly />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Urgent Note (Optional)</label>
+            <textarea id="sosRemarks" class="form-control" rows="2" placeholder="e.g. Immediate medical attention needed..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn" style="background: #dc2626; color: white;">🚨 DISPATCH SOS NOW</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 9: Change / Reassign Hostel Warden (Principal Exclusive) -->
+  <div id="editWardenModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="editWardenModalTitle">Reassign / Edit Hostel Warden</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="editWardenForm" onsubmit="handleSaveWardenChanges(event)">
+        <div class="modal-body">
+          <input type="hidden" id="editWardenHostelId" />
+
+          <div class="form-group">
+            <label class="form-label">Warden Full Name & Title *</label>
+            <input type="text" id="editWardenName" class="form-control" required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Phone Helpline *</label>
+              <input type="tel" id="editWardenPhone" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Institutional Email *</label>
+              <input type="email" id="editWardenEmail" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Warden Office Room Location</label>
+            <input type="text" id="editWardenOffice" class="form-control" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Evening Attendance Roll Call Time</label>
+              <input type="text" id="editWardenAttTime" class="form-control" placeholder="e.g. 08:30 PM" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Night Curfew Gate Closing Time</label>
+              <input type="text" id="editWardenCurfew" class="form-control" placeholder="e.g. 10:30 PM" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Login Account Password (Leave blank to keep current)</label>
+            <input type="password" id="editWardenPassword" class="form-control" placeholder="Enter new password to reset" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Warden Details</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 10: Change / Reassign Mess Contractor (Principal Exclusive) -->
+  <div id="editMessContractorModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Manage / Reassign Mess Contractor</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="editMessContractorForm" onsubmit="handleSaveMessContractorChanges(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Catering Agency / Firm Name *</label>
+            <input type="text" id="editMessAgency" class="form-control" required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Head Contractor / Chef Name *</label>
+              <input type="text" id="editMessHeadName" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Official Helpline Phone *</label>
+              <input type="tel" id="editMessPhone" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Dining Hall Seating Capacity</label>
+              <input type="number" id="editMessCapacity" class="form-control" value="350" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Food Safety & Hygiene Certification</label>
+              <input type="text" id="editMessHygieneGrade" class="form-control" value="Grade A+ (ISO 22000 Certified)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contractor Portal Login Password</label>
+            <input type="password" id="editMessPassword" class="form-control" placeholder="Enter new password to reset" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Contractor Details</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 11: Edit Mess Menu (Mess Contractor & Principal) -->
+  <div id="editMessMenuModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Update Dining Hall Menu Courses</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="editMessMenuForm" onsubmit="handleSaveMessMenu(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Select Meal Course *</label>
+            <select id="editMenuMealKey" class="form-control" onchange="populateMealFormFields(this.value)">
+              <option value="breakfast">Breakfast (07:30 AM - 09:30 AM)</option>
+              <option value="lunch" selected>Lunch (12:15 PM - 02:30 PM)</option>
+              <option value="snacks">Evening High-Tea (05:00 PM - 06:15 PM)</option>
+              <option value="dinner">Dinner (07:45 PM - 09:45 PM)</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Meal Service Status</label>
+              <select id="editMenuStatus" class="form-control">
+                <option value="Serving Now">Serving Now</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Service Timings</label>
+              <input type="text" id="editMenuTime" class="form-control" placeholder="e.g. 12:15 PM - 02:30 PM" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Main Special Dish</label>
+            <input type="text" id="editMenuHighlight" class="form-control" placeholder="e.g. Shahi Paneer Butter Masala" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dishes List (Enter one item per line) *</label>
+            <textarea id="editMenuItemsText" class="form-control" rows="5" placeholder="Crispy Dosa with Sambar&#10;Fresh Coconut Chutney&#10;Hot Filter Coffee" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Meal Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 12: Edit Weekly Day Menu (Mess Contractor & Principal) -->
+  <div id="editWeeklyDayModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="editWeeklyDayModalTitle">📅 Edit Weekly Menu Schedule</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="editWeeklyDayForm" onsubmit="handleSaveWeeklyDayMenu(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Select Day of Week *</label>
+            <select id="editWeeklyDaySelect" class="form-control" onchange="populateWeeklyDayFormFields(this.value)">
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Daily Highlight / Special Dish *</label>
+            <input type="text" id="editWeeklySpecial" class="form-control" placeholder="e.g. Special Veg Dum Biryani + Gulab Jamun" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Breakfast Menu *</label>
+            <textarea id="editWeeklyBreakfast" class="form-control" rows="2" placeholder="e.g. Masala Dosa, Sambar, Coconut Chutney, Tea/Coffee" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lunch Menu *</label>
+            <textarea id="editWeeklyLunch" class="form-control" rows="2" placeholder="e.g. Paneer Butter Masala, Dal Makhani, Jeera Rice, Phulka, Sweet" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dinner Menu *</label>
+            <textarea id="editWeeklyDinner" class="form-control" rows="2" placeholder="e.g. Veg Pulao, Mirchi Salan, Curd Rice, Roti, Kheer" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Day Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 13: Set New Password (Direct Entry) -->
+  <div id="forgotPasswordModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔑 Set New Password</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="forgotPasswordForm" onsubmit="handleResetPassword(event)">
+        <div class="modal-body">
+          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px; font-size: 0.85rem; color: #1e40af; line-height: 1.4;">
+            <strong>Security Verification:</strong> Enter your Student Roll Number (or Username) and registered Phone Number to verify your details before changing password.
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Student Roll Number or Username *</label>
+              <input type="text" id="forgotUsername" class="form-control" placeholder="e.g. 21546789, CS24B1042, kaff..." oninput="updateForgotAccountPreview()" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Registered Mobile / Phone Number *</label>
+              <input type="tel" id="forgotPhone" class="form-control" placeholder="e.g. 9876543210 or your mobile..." oninput="updateForgotAccountPreview()" required />
+            </div>
+          </div>
+
+          <!-- Live Account Preview -->
+          <div id="forgotAccountPreview" style="display: none; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--border-subtle);">
+            <span id="forgotAccountIcon" style="font-size: 1.3rem;">✅</span>
+            <div style="flex: 1; line-height: 1.25;">
+              <strong id="forgotAccountName" style="font-size: 0.88rem; display: block;">Student Verified</strong>
+              <span id="forgotAccountDetails" style="font-size: 0.75rem;">Details matched</span>
+            </div>
+            <span id="forgotAccountBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700;">Account Matched</span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">New Password *</label>
+              <input type="password" id="forgotNewPassword" class="form-control" placeholder="Enter new password" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Confirm New Password *</label>
+              <input type="password" id="forgotConfirmPassword" class="form-control" placeholder="Re-type new password" required />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Verify Details & Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 14: Edit Profile & Account Details -->
+  <div id="editProfileModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>👤 Edit Profile & Account Details</h3>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <form id="editProfileForm" onsubmit="handleSaveProfileChanges(event)">
+        <div class="modal-body">
+          <div style="display: flex; align-items: center; gap: 14px; background: var(--bg-subtle); padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px;">
+            <img id="editProfileAvatarPreview" src="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" />
+            <div>
+              <div id="editProfileUserDisplayName" style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">User Name</div>
+              <div id="editProfileUserRoleBadge" style="font-size: 0.78rem; color: var(--text-muted);">Role & Hostel</div>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="editProfileName" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Contact Phone *</label>
+              <input type="tel" id="editProfilePhone" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Room / Office Location *</label>
+              <input type="text" id="editProfileRoom" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Institutional Email *</label>
+              <input type="email" id="editProfileEmail" class="form-control" required />
+            </div>
+          </div>
+
+          <div style="border-top: 1px dashed var(--border-subtle); margin: 16px 0; padding-top: 12px;">
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin-bottom: 8px;">
+              Change Password (Leave blank to keep current)
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" id="editProfileNewPassword" class="form-control" placeholder="Enter new password" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" id="editProfileConfirmPassword" class="form-control" placeholder="Confirm new password" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
